@@ -7,17 +7,17 @@
 3.  後台管理員可對每時段的報名會員紀錄出席與否，未出席的會員可註記警告、超過兩次警告的會員將取消未來預約權利
 
 ### 後端
-Java
-Spring MVC
-Hibernate
-WebSocket
+* Java
+* Spring MVC
+* Hibernate
+* WebSocket
 
 ### 資料庫
-MySQL
-Redis
+* MySQL
+* Redis
 
 ### 前端
-AJAX
-jQuery
-HTML
-CSS
+* AJAX
+* jQuery
+* HTML
+* CSS
