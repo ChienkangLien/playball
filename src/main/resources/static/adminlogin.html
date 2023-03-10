@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="js/jquery.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU"
+      crossorigin="anonymous"
+    />
+    <title>adminLogin</title>
+  </head>
+  <body>
+    <div class="container">
+      <h2>playball管理系統</h2>
+      <br />
+      帳號
+      <input type="text" id="account" />
+      <br />
+      <br />
+      密碼
+      <input type="password" id="password" />
+      <br />
+      <br />
+      <button type="button" id="login" class="btn btn-secondary">登入</button>
+    </div>
+  </body>
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ"
+    crossorigin="anonymous"
+  ></script>
+  <script>
+    $(document).on("click", "button#login", function () {
+      if (
+        $("input#account").val().trim() != "" &&
+        $("input#password").val().trim() != ""
+      ) {
+        const account = $("input#account").val().trim();
+        const password = $("input#password").val().trim();
+
+        fetch("/playball/AdminController/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json;charset=UTF-8",
+          },
+          body: JSON.stringify({
+            account: account,
+            password: password,
+          }),
+        })
+          .then((resp) => resp.json())
+          .then((body) => {
+            alert(`message: ${body.message}`);
+            if (body.message !== "登入失敗") {
+              window.location.assign("/playball/adminhome.html");
+            }
+          });
+      }
+    });
+  </script>
+</html>

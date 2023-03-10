@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="js/jquery.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU"
+      crossorigin="anonymous"
+    />
+    <title>login</title>
+  </head>
+  <body>
+    <div class="container">
+      <h2>playball預約系統</h2>
+      <br />
+      帳號
+      <input type="email" id="email" />
+      <br />
+      <br />
+      密碼
+      <input type="password" id="password" />
+      <br />
+      <br />
+      <button type="button" id="login" class="btn btn-secondary">登入</button>
+      <button type="button" id="register" class="btn btn-secondary">
+        註冊
+      </button>
+    </div>
+  </body>
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ"
+    crossorigin="anonymous"
+  ></script>
+  <script>
+    emailRule =
+      /^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/;
+
+    $(document).on("click", "button#login", function () {
+      if (
+        $("input#email").val().trim() != "" &&
+        $("input#password").val().trim() != "" &&
+        $("input#email").val().trim().search(emailRule) != -1
+      ) {
+        const email = $("input#email").val().trim();
+        const password = $("input#password").val().trim();
+
+        fetch("/playball/UserController/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json;charset=UTF-8",
+          },
+          body: JSON.stringify({
+            email: email,
+            password: password,
+          }),
+        })
+          .then((resp) => resp.json())
+          .then((body) => {
+            alert(`message: ${body.message}`);
+            if (body.message !== "登入失敗") {
+              window.location.assign("/playball/home.html");
+            }
+          });
+      }
+    });
+    $(document).on("click", "button#register", function () {
+      if (
+        $("input#email").val().trim() != "" &&
+        $("input#password").val().trim() != "" &&
+        $("input#email").val().trim().search(emailRule) != -1
+      ) {
+        const email = $("input#email").val().trim();
+        const password = $("input#password").val().trim();
+
+        fetch("/playball/UserController/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json;charset=UTF-8",
+          },
+          body: JSON.stringify({
+            email: email,
+            password: password,
+          }),
+        })
+          .then((resp) => resp.json())
+          .then((body) => {
+            alert(`message: ${body.message}`);
+            $("input#email").val("");
+            $("input#password").val("");
+          });
+      }
+    });
+  </script>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU"
+      crossorigin="anonymous"
+    />
+    <script src="js/jquery.js"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ"
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      input#date,
+      select,
+      div#ava,
+      button#book {
+        margin-left: 10%;
+        margin-top: 1%;
+      }
+      h2 {
+        margin-top: 5%;
+        margin-left: 10%;
+      }
+      button#logout {
+        position: absolute;
+        right: 10%;
+        top: 10%;
+      }
+    </style>
+    <title>playball</title>
+  </head>
+  <body>
+    <div class="container">
+      <h2>playball即時預約系統</h2>
+      <button type="button" class="btn btn-secondary" id="logout">登出</button>
+      <br />
+      <input type="date" id="date" />
+      <br />
+      <select id="select">
+        <option value="早上">早上</option>
+        <option value="中午">中午</option>
+        <option value="下午">下午</option>
+        <option value="晚上">晚上</option>
+      </select>
+      <div id="ava"></div>
+      <button id="book" class="btn btn-secondary">預約此時段</button>
+      <br /><br />
+      <h5>
+        使用者須知:完成預約後若無法出席該場次請提前取消預約，無故缺席將被記錄違規，違規次數達兩次將無法提供預約，若要消除違規次數請聯絡場館
+      </h5>
+      <div>
+        <table class="table table-bordered align-middle table-striped">
+          <thead>
+            <tr>
+              <th scope="col">使用者</th>
+              <th scope="col">違規次數</th>
+            </tr>
+          </thead>
+          <tbody id="user"></tbody>
+        </table>
+      </div>
+      <table class="table table-bordered align-middle table-striped">
+        <thead>
+          <tr>
+            <th scope="col">日期</th>
+            <th scope="col">時段</th>
+            <th scope="col">順位</th>
+            <th scope="col">取消預約</th>
+          </tr>
+        </thead>
+        <tbody id="record"></tbody>
+      </table>
+    </div>
+
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+      <div
+        id="liveToast"
+        class="toast"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
+        <div class="toast-header">
+          <strong class="me-auto">注意注意</strong>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="toast"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="toast-body"></div>
+      </div>
+    </div>
+  </body>
+
+  <script>
+    let toastLiveExample = document.getElementById("liveToast");
+
+    //推播
+    let MyPoint = "/websocket";
+    let host = window.location.host;
+    let path = window.location.pathname;
+    let webCtx = path.substring(0, path.indexOf("/", 1));
+    let endPointURL = "ws://" + host + webCtx + MyPoint;
+
+    let webSocket = new WebSocket(endPointURL);
+    webSocket.onmessage = function (event) {
+      $("div.toast-body").text(event.data);
+      let toast = new bootstrap.Toast(toastLiveExample);
+      toast.show();
+    };
+
+    //顯示使用者資訊
+    fetch("/playball/UserController")
+      .then((resp) => {
+        if (resp.status === 204) {
+          console.log("resp.status===" + resp.status);
+        } else {
+          return resp.json();
+        }
+      })
+      .then((body) => {
+        try {
+          $("tbody#user").empty();
+          let html = `<tr><th>${body.email}</th><td>${body.fouls}</td></tr>`;
+          $("tbody#user").append(html);
+        } catch (error) {
+          console.log("沒有收到資料");
+        }
+      });
+
+    //日期選擇
+    $(document).ready(function () {
+      $("input").attr(
+        "min",
+        new Date().getFullYear() +
+          "-" +
+          (new Date().getMonth() + 1).toString().padStart(2, "0") +
+          "-" +
+          new Date().getDate().toString().padStart(2, "0")
+      );
+      load();
+    });
+
+    //顯示剩餘位子
+    $(document).on("change", "input,select", function () {
+      if ($("input").val() != "" && $("select").val() != "") {
+        const date = $("input").val();
+        const timeSlot = $("select").val();
+
+        fetch(
+          `/playball/ReservationsController/ava?date=${date}&timeSlot=${timeSlot}`
+        )
+          .then((resp) => resp.json())
+          .then((body) => {
+            $("div#ava").text(body.message);
+          });
+      }
+    });
+
+    //預約時段
+    $(document).on("click", "button#book", function () {
+      if ($("input").val() != "" && $("select").val() != "") {
+        const bookDate = $("input").val();
+        const timeSlot = $("select").val();
+
+        fetch("/playball/ReservationsController/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json;charset=UTF-8",
+          },
+          body: JSON.stringify({
+            bookDate: bookDate,
+            timeSlot: timeSlot,
+          }),
+        })
+          .then((resp) => resp.json())
+          .then((body) => {
+            alert(`message: ${body.message}`);
+            if (body.message == "新增成功") {
+              webSocket.send(
+                `有人加入了${bookDate}${timeSlot}場次，趕快來一同參加吧~~`
+              );
+            }
+            $("div#ava").text("");
+            $("input").val("");
+            load();
+          });
+      }
+    });
+
+    //訂單紀錄
+    function load() {
+      $("tbody#record").empty();
+      let html = "";
+      fetch("/playball/ReservationsController")
+        .then((resp) => {
+          if (resp.status === 204) {
+            console.log("resp.status===" + resp.status);
+          } else {
+            return resp.json();
+          }
+        })
+        .then((body) => {
+          try {
+            if (body.length != null) {
+              for (let i = 0; i < body.length; i++) {
+                html += `<tr data-id=${body[i].id}><th>${body[i].bookDate}</th><td>${body[i].timeSlot}</td><td>${body[i].bookOrder}</td><td><button class='btn btn-danger'>取消</button></td></tr>`;
+              }
+              $("tbody#record").append(html);
+            }
+          } catch (error) {
+            console.log("沒有收到資料");
+          }
+        });
+    }
+
+    //取消預約
+    $(document).on("click", "button.btn-danger", function () {
+      let id = $(this).closest("tr").attr("data-id");
+
+      fetch(`/playball/ReservationsController?id=${id}`, {
+        method: "DELETE",
+      })
+        .then((resp) => resp.json())
+        .then((body) => {
+          alert(`message: ${body.message}`);
+          load();
+        });
+    });
+
+    //登出
+    $(document).on("click", "button#logout", function () {
+      fetch("/playball/UserController/logout", {
+        method: "POST",
+      })
+        .then((resp) => resp.json())
+        .then((body) => {
+          alert(`message: ${body.message}`);
+          window.location.reload();
+        });
+    });
+  </script>
+</html>
