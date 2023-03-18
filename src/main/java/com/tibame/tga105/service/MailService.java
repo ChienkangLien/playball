@@ -12,11 +12,11 @@ public class MailService {
     @Autowired
     private JavaMailSenderImpl mailSender;
 
-    public void sendEmail(String to) {
+    public void sendEmail(String to,String bookDate, String timeSlot) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom("yourGoogleEmail");
         message.setTo(to);
-        message.setSubject("候補上囉");
+        message.setSubject(bookDate+timeSlot+" 候補上囉");
         message.setText("務必出席!!!  若無法出席請再取消預約");
         mailSender.setPassword("yourPassword");
         mailSender.send(message);

@@ -44,7 +44,7 @@ public class ReservationsServiceImpl implements ReservationsService {
 			ReservationsVO next = reservationsDAO.getNext(temp);
 			if (next != null) {
 //				發送郵件功能
-				mailService.sendEmail(next.getUserVO().getEmail());
+				mailService.sendEmail(next.getUserVO().getEmail(), temp.getBookDate().toString(), temp.getTimeSlot());
 				next.setSendMail(1);
 				next.setBookOrder(next.getBookOrder() + "(補位成功)");
 			}
